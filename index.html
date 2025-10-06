@@ -26,7 +26,29 @@
     h1 {
       text-align: center;
       color: #0e7490;
-      margin-bottom: 12px;
+      margin-bottom: 6px;
+    }
+    .monthLabel {
+      text-align: center;
+      font-size: 15px;
+      color: #475569;
+      margin-bottom: 16px;
+    }
+    .infoFields {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    .infoFields input {
+      font-family: "Times New Roman";
+      font-size: 14px;
+      padding: 6px 8px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      width: 200px;
+      text-align: center;
     }
     .toolbar {
       display: flex;
@@ -44,16 +66,9 @@
       cursor: pointer;
       font-size: 13px;
     }
-    .btn.primary {
-      background: #0ea5e9;
-      color: #fff;
-      border-color: #0ea5e9;
-    }
-    .btn.ok {
-      background: #16a34a;
-      color: #fff;
-      border-color: #16a34a;
-    }
+    .btn.primary { background: #0ea5e9; color: #fff; border-color: #0ea5e9; }
+    .btn.ok { background: #16a34a; color: #fff; border-color: #16a34a; }
+
     table {
       width: 100%;
       border-collapse: collapse;
@@ -65,12 +80,8 @@
       text-align: center;
       font-size: 13px;
     }
-    th {
-      background: #f0f0f0;
-    }
-    tr.weekend {
-      background-color: #fde68a;
-    }
+    th { background: #f0f0f0; }
+    tr.weekend { background-color: #fde68a; }
     input, select {
       width: 100%;
       border: none;
@@ -101,6 +112,12 @@
 <body>
   <div class="wrap">
     <h1>Dziennik Kierowcy</h1>
+    <div id="monthYear" class="monthLabel"></div>
+
+    <div class="infoFields no-print">
+      <input type="text" id="driverName" placeholder="Imię i nazwisko kierowcy" oninput="saveHeader()">
+      <input type="text" id="carNumber" placeholder="Nr rejestracyjny pojazdu" oninput="saveHeader()">
+    </div>
 
     <div class="toolbar no-print">
       <button class="btn primary" onclick="addDay()">➕ Dodaj dzień</button>
@@ -129,16 +146,30 @@
   </div>
 
   <script>
-    // Dane w pamięci lokalnej
     const STORAGE_KEY = "dziennik_kierowcy_data";
+    const HEADER_KEY = "dziennik_kierowcy_header";
+
+    const months = ["Styczeń","Luty","Marzec","Kwiecień","Maj","Czerwiec","Lipiec","Sierpień","Wrzesień","Październik","Listopad","Grudzień"];
+    const now = new Date();
+    document.getElementById("monthYear").textContent = `${months[now.getMonth()]} ${now.getFullYear()}`;
 
     function loadData() {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) document.getElementById("tableBody").innerHTML = saved;
+
+      const head = JSON.parse(localStorage.getItem(HEADER_KEY) || "{}");
+      if (head.name) document.getElementById("driverName").value = head.name;
+      if (head.car) document.getElementById("carNumber").value = head.car;
     }
 
     function saveData() {
       localStorage.setItem(STORAGE_KEY, document.getElementById("tableBody").innerHTML);
+    }
+
+    function saveHeader() {
+      const name = document.getElementById("driverName").value;
+      const car = document.getElementById("carNumber").value;
+      localStorage.setItem(HEADER_KEY, JSON.stringify({ name, car }));
     }
 
     function addDay() {
@@ -159,7 +190,10 @@
     function clearData() {
       if (confirm("Na pewno usunąć wszystkie dane?")) {
         localStorage.removeItem(STORAGE_KEY);
+        localStorage.removeItem(HEADER_KEY);
         document.getElementById("tableBody").innerHTML = "";
+        document.getElementById("driverName").value = "";
+        document.getElementById("carNumber").value = "";
       }
     }
 
@@ -169,11 +203,18 @@
       pdf.setFont("Times", "normal");
       pdf.setFontSize(12);
       pdf.text("Dziennik Kierowcy", 105, 15, { align: "center" });
+      pdf.setFontSize(11);
+      pdf.text(`${months[now.getMonth()]} ${now.getFullYear()}`, 105, 22, { align: "center" });
+
+      const name = document.getElementById("driverName").value || "";
+      const car = document.getElementById("carNumber").value || "";
+      pdf.text(`Kierowca: ${name}`, 10, 30);
+      pdf.text(`Nr pojazdu: ${car}`, 105, 30);
 
       const table = document.getElementById("logTable");
-      let y = 25;
-
+      let y = 38;
       const rows = [...table.rows];
+
       for (let i = 0; i < rows.length; i++) {
         const cells = [...rows[i].cells];
         const text = cells.map(c => c.innerText || c.querySelector('input,select')?.value || "").join(" | ");
@@ -183,13 +224,14 @@
       }
 
       pdf.text("Twórcy: Łukasz Stasinski & GPT", 105, 290, { align: "center" });
-      pdf.save("Dziennik_Kierowcy.pdf");
+      pdf.save(`Dziennik_${name || "Kierowca"}_${months[now.getMonth()]}_${now.getFullYear()}.pdf`);
     }
 
     function exportExcel() {
+      const name = document.getElementById("driverName").value || "Kierowca";
       const table = document.getElementById("logTable");
       const wb = XLSX.utils.table_to_book(table, { sheet: "Dziennik" });
-      XLSX.writeFile(wb, "Dziennik_Kierowcy.xlsx");
+      XLSX.writeFile(wb, `Dziennik_${name}_${months[now.getMonth()]}_${now.getFullYear()}.xlsx`);
     }
 
     loadData();
