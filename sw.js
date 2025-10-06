@@ -1,9 +1,6 @@
-// Service Worker – Dziennik-Kiero- (offline + cache)
-// Wersja cache zwiększaj przy aktualizacjach, np. v2, v3...
-const CACHE_NAME = 'dziennik-kiero-cache-v1';
+const CACHE_NAME = 'dziennik-kiero-v1';
 const OFFLINE_URL = './offline.html';
-
-const URLS_TO_CACHE = [
+const FILES_TO_CACHE = [
   './',
   './index.html',
   './manifest.json',
@@ -12,45 +9,34 @@ const URLS_TO_CACHE = [
   OFFLINE_URL
 ];
 
-// Instalacja – pre-cache plików
-self.addEventListener('install', (event) => {
+// Instalacja
+self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(URLS_TO_CACHE))
+    caches.open(CACHE_NAME)
+      .then(cache => cache.addAll(FILES_TO_CACHE))
   );
+  self.skipWaiting();
 });
 
-// Aktywacja – czyszczenie starych cache
-self.addEventListener('activate', (event) => {
+// Aktywacja
+self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(keys =>
-      Promise.all(keys.map(key => {
-        if (key !== CACHE_NAME) return caches.delete(key);
-      }))
+      Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k)))
     )
   );
   self.clients.claim();
 });
 
-// Fetch – nawigacja -> offline.html; reszta: cache falling back to network
-self.addEventListener('fetch', (event) => {
+// Fetch
+self.addEventListener('fetch', event => {
   if (event.request.mode === 'navigate') {
     event.respondWith(
       fetch(event.request).catch(() => caches.match(OFFLINE_URL))
     );
-    return;
+  } else {
+    event.respondWith(
+      caches.match(event.request).then(resp => resp || fetch(event.request))
+    );
   }
-
-  event.respondWith(
-    caches.match(event.request).then(res => {
-      if (res) return res;
-      return fetch(event.request).then(networkRes => {
-        // cache’uj tylko zasoby z tej samej domeny
-        if (event.request.url.startsWith(self.location.origin)) {
-          const copy = networkRes.clone();
-          caches.open(CACHE_NAME).then(c => c.put(event.request, copy));
-        }
-        return networkRes;
-      }).catch(() => caches.match(OFFLINE_URL));
-    })
-  );
 });
