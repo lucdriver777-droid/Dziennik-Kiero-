@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<title>Tryb offline – Dziennik Kierowcy</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+  :root{
+    --bg1:#f2f8ff; --bg2:#e8f1ff; --text:#0f172a; --muted:#475569; --brand:#0ea5e9; --brand-dark:#0284c7;
+  }
+  *{ box-sizing:border-box; }
+  body{
+    margin:0; height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    font-family:"Segoe UI", Arial, sans-serif; color:var(--text);
+    background:linear-gradient(180deg, var(--bg1) 0%, var(--bg2) 100%);
+    text-align:center; padding:20px;
+  }
+  .icon{
+    width:140px; height:140px; margin-bottom:24px;
+    background:url('icon-192.png') center/contain no-repeat;
+    animation:pulse 3s infinite ease-in-out;
+  }
+  @keyframes pulse{
+    0%{ transform:scale(1); opacity:1; }
+    50%{ transform:scale(1.05); opacity:.9; }
+    100%{ transform:scale(1); opacity:1; }
+  }
+  h1{ font-size:1.6em; margin:.2em 0 .4em; color:#0e7490; }
+  p{ color:var(--muted); max-width:340px; line-height:1.5; margin:0 auto 20px; }
+  button{
+    background:var(--brand); color:#fff; border:none; border-radius:12px; padding:10px 18px; font-size:15px; cursor:pointer;
+    transition:background .2s ease, transform .1s ease;
+  }
+  button:hover{ background:var(--brand-dark); transform:scale(1.03); }
+  footer{ position:absolute; bottom:10px; font-size:12px; color:#64748b; }
+</style>
+</head>
+<body>
+  <div class="icon"></div>
+  <h1>🚫 Brak połączenia z siecią</h1>
+  <p>Dane są zapisane lokalnie. Po odzyskaniu połączenia możesz kontynuować pracę w aplikacji.</p>
+  <button onclick="location.reload()">🔄 Spróbuj ponownie</button>
+  <footer>LS &amp; GPT • Tryb offline</footer>
+</body>
+</html>
