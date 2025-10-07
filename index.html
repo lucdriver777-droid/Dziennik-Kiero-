@@ -3,95 +3,67 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Dziennik kierowcy (PWA)</title>
-<link rel="manifest" href="manifest.json">
+<title>Dziennik kierowcy — pary Z/R (PWA)</title>
+<link rel="manifest" href="manifest.webmanifest">
 <meta name="theme-color" content="#0d6efd">
-<link rel="icon" href="icon-192.png" type="image/png">
-
 <style>
-  :root{ --primary:#0d6efd; --bg:#f5f7fa; --card:#fff; }
-  *{ box-sizing:border-box; }
-  body{
-    font-family: Arial, sans-serif;
-    background: var(--bg);
-    margin: 0;
-    display:flex;
-    flex-direction:column;
-    min-height:100vh;
-  }
-  header{
-    background: var(--primary);
-    color:#fff;
-    padding:16px;
-    text-align:center;
-    font-size:20px;
-    font-weight:bold;
-  }
-  .container{
-    flex:1;
-    padding:20px;
-    max-width:900px;
-    margin:auto;
-    display:grid;
-    gap:16px;
-  }
-  .card{
-    background:var(--card);
-    border-radius:12px;
-    box-shadow:0 2px 8px rgba(0,0,0,0.08);
-    padding:16px;
-  }
-  label{font-weight:700;margin:10px 0 6px;display:block;}
-  input,select,button{
-    width:100%;
-    padding:10px 12px;
-    border-radius:10px;
-    border:1px solid #d0d7de;
-    font-size:15px;
-  }
-  .row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
-  .row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
-  .btn{background:var(--primary);color:#fff;border:none;cursor:pointer;}
-  .btn:hover{filter:brightness(.95);}
-  .btn-muted{background:#6c757d;}
-  .btn-danger{background:#dc3545;}
-  table{
-    width:100%;
-    border-collapse:collapse;
-    background:#fff;
-    border-radius:10px;
-    overflow:hidden;
-  }
-  th,td{
-    padding:10px;
-    border-bottom:1px solid #e9ecef;
-    text-align:center;
-    vertical-align:middle;
-  }
-  thead th{background:#eef4ff;font-weight:700;}
-  footer{text-align:center;padding:14px;color:#666;}
-  @media(max-width:760px){.row,.row-3{grid-template-columns:1fr;}}
+  :root{ --primary:#0d6efd; --bg:#f5f5f5; --card:#fff; --muted:#6c757d; }
+  *{ box-sizing:border-box }
+  body{ font-family: Arial, sans-serif; background:var(--bg); margin:0; min-height:100vh; display:flex; flex-direction:column;}
+  header{ padding:16px 20px; background:#fff; box-shadow:0 2px 8px rgba(0,0,0,.06); position:sticky; top:0; z-index:10; }
+  h1{ margin:0; font-size:22px; text-align:center; color:#000 }
+  .container{ padding:20px; display:grid; gap:16px; flex:1; }
+  .card{ background:var(--card); border-radius:12px; box-shadow:0 2px 8px rgba(0,0,0,.08); padding:16px; }
+  label{ display:block; font-weight:700; margin:10px 0 6px }
+  input,select,button{ width:100%; padding:10px 12px; border-radius:10px; border:1px solid #d0d7de; font-size:15px }
+  .row{ display:grid; grid-template-columns:1fr 1fr; gap:10px }
+  .row-3{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px }
+  .btn{ background:var(--primary); color:#fff; border:none; cursor:pointer }
+  .btn:hover{ filter:brightness(.95) }
+  .btn-muted{ background:#6c757d; color:#fff }
+  .btn-danger{ background:#dc3545; color:#fff }
+  table{ width:100%; border-collapse:collapse; background:#fff; border-radius:10px; overflow:hidden }
+  th,td{ padding:10px; border-bottom:1px solid #e9ecef; text-align:center; vertical-align:middle }
+  thead th{ background:#eef4ff; font-weight:700 }
+  td.place, th.place { text-align:left; }
+  .actions{ display:flex; gap:6px; justify-content:center; flex-wrap:wrap }
+  .no-print-inline{}
+  .print-only{ display:none }
+  footer{ text-align:center; padding:14px; color:#666 }
+  @media (max-width:760px){ .row,.row-3{ grid-template-columns:1fr } }
   @media print{
-    header,.no-print,footer{display:none!important;}
-    @page{size:A4 landscape;margin:12mm;}
-    table{font-size:11px;}
+    header,.no-print, footer{ display:none !important }
+    .no-print-inline{ display:none !important }
+    .print-only{ display:block !important; margin-bottom:8pt }
+    @page{ size:A4 landscape; margin:12mm }
+    table{ table-layout:fixed; width:100%; font-size:12px }
+    thead { display: table-header-group; }
+    tfoot { display: table-footer-group; }
+    tr { page-break-inside: avoid; }
+    th,td{ text-align:center !important }
+    td.place, th.place { text-align:center !important }
   }
 </style>
 </head>
-
 <body>
-<header>🚛 Dziennik kierowcy</header>
+<header><h1>🚛 Dziennik kierowcy</h1></header>
+
+<div id="printHeader" class="print-only" style="padding:0 20px;">
+  <h2 style="margin:0 0 4pt 0; color:#000;">Dziennik kierowcy</h2>
+  <div id="printMeta" style="color:#000;"></div>
+</div>
 
 <div class="container">
+  <!-- Formularz -->
   <div class="card no-print">
     <div class="row">
       <div>
-        <label for="driver">Kierowca</label>
+        <label for="driver">Kierowca (imię i nazwisko)</label>
         <input id="driver" oninput="saveHeader()">
       </div>
       <div>
-        <label for="car">Nr auta</label>
-        <input id="car" oninput="saveHeader()">
+        <label for="carNo">Nr auta</label>
+        <input id="carNo" oninput="saveHeader()">
       </div>
     </div>
 
@@ -108,8 +80,8 @@
         <input type="date" id="date">
       </div>
       <div>
-        <label for="odo">Stan licznika (km)</label>
-        <input type="number" id="odo" inputmode="numeric">
+        <label for="odometer">Stan licznika (km)</label>
+        <input type="number" id="odometer" inputmode="numeric">
       </div>
     </div>
 
@@ -126,16 +98,19 @@
     </div>
   </div>
 
+  <!-- Tabela -->
   <div class="card">
     <table id="pairTable">
       <thead>
         <tr>
-          <th>Data Z.</th><th>Miejsce Z.</th><th>Stan licznika</th>
-          <th>Data R.</th><th>Miejsce R.</th><th>Stan licznika</th>
-          <th>Przebieg (km)</th>
+          <th>Data Z.</th><th class="place">Miejsce Z.</th><th>Stan licznika</th>
+          <th>Data R.</th><th class="place">Miejsce R.</th><th>Stan licznika</th>
+          <th class="no-print-inline">Przebieg (km)</th>
+          <th class="no-print-inline">Akcje</th>
         </tr>
       </thead>
       <tbody></tbody>
+      <tfoot><tr><td colspan="8"></td></tr></tfoot>
     </table>
   </div>
 </div>
@@ -143,77 +118,77 @@
 <footer class="no-print">Twórcy: Łukasz Stasinski & ChatGPT (GPT-5)</footer>
 
 <script>
-let entries = [];
+var entries = [];
 
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("./sw.js")
-      .then(()=>console.log("✅ SW zarejestrowany"))
-      .catch(err=>console.error("Błąd SW:", err));
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('service-worker.js');
   });
 }
 
-function todayStr(){return new Date().toISOString().slice(0,10);}
-function persist(){localStorage.setItem("driverLog_pairs",JSON.stringify(entries));}
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+function persist(){ localStorage.setItem('driverLog_pairs_only', JSON.stringify(entries)); }
+function byDateTs(a,b){ return a.date.localeCompare(b.date) || a.ts - b.ts; }
+
 function load(){
-  try{return JSON.parse(localStorage.getItem("driverLog_pairs"))||[];}
-  catch{return[];}
+  var raw = localStorage.getItem('driverLog_pairs_only');
+  if(!raw) return [];
+  try{ return JSON.parse(raw); }catch(e){ return []; }
 }
+function nextId(){ return entries.length ? Math.max.apply(null, entries.map(e=>e.id))+1 : 1; }
+
 function saveHeader(){
-  localStorage.setItem("driverName",document.getElementById("driver").value);
-  localStorage.setItem("carNumber",document.getElementById("car").value);
+  localStorage.setItem('driverName', document.getElementById('driver').value || '');
+  localStorage.setItem('carNumber', document.getElementById('carNo').value || '');
+  updatePrintMeta();
 }
+function updatePrintMeta(){
+  var d = localStorage.getItem('driverName') || '-';
+  var c = localStorage.getItem('carNumber') || '-';
+  document.getElementById('printMeta').textContent = "Kierowca: "+d+" • Nr auta: "+c;
+}
+function setDefaultDate(){
+  if(!document.getElementById('date').value) document.getElementById('date').value = todayStr();
+  updatePrintMeta();
+}
+
 function addEntry(){
-  const type=document.getElementById("type").value;
-  const date=document.getElementById("date").value||todayStr();
-  const place=document.getElementById("place").value.trim();
-  const odo=document.getElementById("odo").value.trim();
-  if(!place||!odo){alert("Uzupełnij miejsce i licznik!");return;}
-  entries.push({type,date,place,odo:parseInt(odo),ts:Date.now()});
-  persist();render();
-  document.getElementById("place").value="";
-  document.getElementById("odo").value="";
+  var type=document.getElementById('type').value;
+  var date=document.getElementById('date').value||todayStr();
+  var place=document.getElementById('place').value.trim();
+  var odo=document.getElementById('odometer').value.trim();
+  if(!place||!odo){alert("Wpisz miejsce i licznik!");return;}
+  entries.push({id:nextId(), date:date, type:type, place:place, odometer:odo, ts:Date.now()});
+  persist(); render();
 }
-function clearLog(){
-  if(confirm("Na pewno usunąć wszystkie dane?")){
-    entries=[];persist();render();
-  }
-}
-function byDate(a,b){return a.date.localeCompare(b.date)||a.ts-b.ts;}
+function clearLog(){ if(confirm("Na pewno?")){entries=[]; persist(); render();} }
+
 function render(){
-  entries=load();
-  entries.sort(byDate);
-  const tbody=document.querySelector("#pairTable tbody");
-  tbody.innerHTML="";
-  let loadEntry=null;
-  entries.forEach(e=>{
-    if(e.type==="Załadunek"){loadEntry=e;}
-    else if(loadEntry){
-      const distance=e.odo-loadEntry.odo;
-      const row=document.createElement("tr");
-      row.innerHTML=`
-        <td>${loadEntry.date}</td><td>${loadEntry.place}</td><td>${loadEntry.odo}</td>
-        <td>${e.date}</td><td>${e.place}</td><td>${e.odo}</td>
-        <td>${distance>0?distance:""}</td>`;
-      tbody.appendChild(row);
-      loadEntry=null;
-    }
+  var tb=document.querySelector('#pairTable tbody'); tb.innerHTML="";
+  var pairs=[]; var load=null;
+  entries.sort(byDateTs).forEach(function(e){
+    if(e.type==="Załadunek"){ load=e; }
+    else if(load){ pairs.push([load,e]); load=null; }
+  });
+  pairs.forEach(function(p){
+    var delta = p[1].odometer && p[0].odometer ? (p[1].odometer - p[0].odometer) : '';
+    var tr=document.createElement("tr");
+    tr.innerHTML="<td>"+p[0].date+"</td><td class='place'>"+p[0].place+"</td><td>"+p[0].odometer+"</td>"+
+    "<td>"+p[1].date+"</td><td class='place'>"+p[1].place+"</td><td>"+p[1].odometer+"</td><td class='no-print-inline'>"+delta+"</td><td class='no-print-inline'></td>";
+    tb.appendChild(tr);
   });
 }
 function exportCSV(){
-  let csv="Data Z.,Miejsce Z.,Stan,Data R.,Miejsce R.,Stan,Przebieg\n";
-  document.querySelectorAll("#pairTable tbody tr").forEach(tr=>{
-    const tds=tr.querySelectorAll("td");
-    const row=[...tds].map(td=>td.textContent.replace(/,/g," "));
-    csv+=row.join(",")+"\n";
+  var csv="Data Z.,Miejsce Z.,Stan,Data R.,Miejsce R.,Stan,Przebieg\\n";
+  document.querySelectorAll("#pairTable tbody tr").forEach(function(tr){
+    var tds=tr.querySelectorAll("td"); var row=[];
+    for(var i=0;i<7;i++) row.push(tds[i].textContent.replace(/,/g," "));
+    csv+=row.join(",")+"\\n";
   });
-  const blob=new Blob([csv],{type:"text/csv"});
-  const a=document.createElement("a");
-  a.href=URL.createObjectURL(blob);
-  a.download="dziennik.csv";
-  a.click();
+  var blob=new Blob([csv],{type:"text/csv"}); var a=document.createElement("a");
+  a.href=URL.createObjectURL(blob); a.download="dziennik.csv"; a.click();
 }
-window.onload=()=>{entries=load();render();};
+window.onload=function(){ entries=load(); setDefaultDate(); render(); };
 </script>
 </body>
 </html>
