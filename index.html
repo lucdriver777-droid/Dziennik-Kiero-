@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Dziennik kierowcy — pary Z/R (PWA)</title>
 
-<!-- ✅ Poprawiona ścieżka do manifestu -->
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#0d6efd">
 <link rel="icon" href="icon-192.png" type="image/png">
@@ -108,11 +107,9 @@
           <th>Data Z.</th><th class="place">Miejsce Z.</th><th>Stan licznika</th>
           <th>Data R.</th><th class="place">Miejsce R.</th><th>Stan licznika</th>
           <th class="no-print-inline">Przebieg (km)</th>
-          <th class="no-print-inline">Akcje</th>
         </tr>
       </thead>
       <tbody></tbody>
-      <tfoot><tr><td colspan="8"></td></tr></tfoot>
     </table>
   </div>
 </div>
@@ -120,11 +117,11 @@
 <footer class="no-print">Twórcy: Łukasz Stasinski & ChatGPT (GPT-5)</footer>
 
 <script>
-var entries = [];
+let entries = [];
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', function() {
-    navigator.serviceWorker.register('./sw.js'); // ✅ poprawiona nazwa
+    navigator.serviceWorker.register('./sw.js');
   });
 }
 
@@ -133,11 +130,11 @@ function persist(){ localStorage.setItem('driverLog_pairs_only', JSON.stringify(
 function byDateTs(a,b){ return a.date.localeCompare(b.date) || a.ts - b.ts; }
 
 function load(){
-  var raw = localStorage.getItem('driverLog_pairs_only');
-  if(!raw) return [];
-  try{ return JSON.parse(raw); }catch(e){ return []; }
+  try { return JSON.parse(localStorage.getItem('driverLog_pairs_only')) || []; }
+  catch { return []; }
 }
-function nextId(){ return entries.length ? Math.max.apply(null, entries.map(e=>e.id))+1 : 1; }
+
+function nextId(){ return entries.length ? Math.max(...entries.map(e=>e.id))+1 : 1; }
 
 function saveHeader(){
   localStorage.setItem('driverName', document.getElementById('driver').value || '');
@@ -145,52 +142,97 @@ function saveHeader(){
   updatePrintMeta();
 }
 function updatePrintMeta(){
-  var d = localStorage.getItem('driverName') || '-';
-  var c = localStorage.getItem('carNumber') || '-';
+  const d = localStorage.getItem('driverName') || '-';
+  const c = localStorage.getItem('carNumber') || '-';
   document.getElementById('printMeta').textContent = "Kierowca: "+d+" • Nr auta: "+c;
 }
 function setDefaultDate(){
-  if(!document.getElementById('date').value) document.getElementById('date').value = todayStr();
+  const dateInput = document.getElementById('date');
+  if(!dateInput.value) dateInput.value = todayStr();
   updatePrintMeta();
 }
 
 function addEntry(){
-  var type=document.getElementById('type').value;
-  var date=document.getElementById('date').value||todayStr();
-  var place=document.getElementById('place').value.trim();
-  var odo=document.getElementById('odometer').value.trim();
-  if(!place||!odo){alert("Wpisz miejsce i licznik!");return;}
-  entries.push({id:nextId(), date:date, type:type, place:place, odometer:odo, ts:Date.now()});
-  persist(); render();
+  const type=document.getElementById('type').value;
+  const date=document.getElementById('date').value||todayStr();
+  const place=document.getElementById('place').value.trim();
+  const odo=document.getElementById('odometer').value.trim();
+
+  if(!place || !odo){
+    alert("Wpisz miejsce i licznik!");
+    return;
+  }
+
+  entries.push({
+    id: nextId(),
+    date,
+    type,
+    place,
+    odometer: Number(odo),
+    ts: Date.now()
+  });
+
+  persist();
+  render();
+
+  // czyszczenie pól
+  document.getElementById('place').value = "";
+  document.getElementById('odometer').value = "";
 }
-function clearLog(){ if(confirm("Na pewno?")){entries=[]; persist(); render();} }
+
+function clearLog(){
+  if(confirm("Na pewno usunąć wszystkie dane?")){
+    entries = [];
+    persist();
+    render();
+  }
+}
 
 function render(){
-  var tb=document.querySelector('#pairTable tbody'); tb.innerHTML="";
-  var pairs=[]; var load=null;
-  entries.sort(byDateTs).forEach(function(e){
+  const tb=document.querySelector('#pairTable tbody');
+  tb.innerHTML="";
+  const pairs=[]; let load=null;
+
+  entries.sort(byDateTs).forEach(e=>{
     if(e.type==="Załadunek"){ load=e; }
     else if(load){ pairs.push([load,e]); load=null; }
   });
-  pairs.forEach(function(p){
-    var delta = p[1].odometer && p[0].odometer ? (p[1].odometer - p[0].odometer) : '';
-    var tr=document.createElement("tr");
-    tr.innerHTML="<td>"+p[0].date+"</td><td class='place'>"+p[0].place+"</td><td>"+p[0].odometer+"</td>"+
-    "<td>"+p[1].date+"</td><td class='place'>"+p[1].place+"</td><td>"+p[1].odometer+"</td><td class='no-print-inline'>"+delta+"</td><td class='no-print-inline'></td>";
+
+  pairs.forEach(p=>{
+    const delta = p[1].odometer && p[0].odometer ? (p[1].odometer - p[0].odometer) : '';
+    const tr=document.createElement("tr");
+    tr.innerHTML=`
+      <td>${p[0].date}</td>
+      <td class="place">${p[0].place}</td>
+      <td>${p[0].odometer}</td>
+      <td>${p[1].date}</td>
+      <td class="place">${p[1].place}</td>
+      <td>${p[1].odometer}</td>
+      <td class="no-print-inline">${delta}</td>
+    `;
     tb.appendChild(tr);
   });
 }
+
 function exportCSV(){
-  var csv="Data Z.,Miejsce Z.,Stan,Data R.,Miejsce R.,Stan,Przebieg\\n";
-  document.querySelectorAll("#pairTable tbody tr").forEach(function(tr){
-    var tds=tr.querySelectorAll("td"); var row=[];
-    for(var i=0;i<7;i++) row.push(tds[i].textContent.replace(/,/g," "));
-    csv+=row.join(",")+"\\n";
+  let csv="Data Z.,Miejsce Z.,Stan,Data R.,Miejsce R.,Stan,Przebieg\n";
+  document.querySelectorAll("#pairTable tbody tr").forEach(tr=>{
+    const tds=tr.querySelectorAll("td");
+    const row=[...tds].map(td=>td.textContent.replace(/,/g," "));
+    csv+=row.join(",")+"\n";
   });
-  var blob=new Blob([csv],{type:"text/csv"}); var a=document.createElement("a");
-  a.href=URL.createObjectURL(blob); a.download="dziennik.csv"; a.click();
+  const blob=new Blob([csv],{type:"text/csv"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="dziennik.csv";
+  a.click();
 }
-window.onload=function(){ entries=load(); setDefaultDate(); render(); };
+
+window.onload=function(){
+  entries=load();
+  setDefaultDate();
+  render();
+};
 </script>
 </body>
 </html>
