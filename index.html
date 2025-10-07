@@ -1,108 +1,136 @@
 <!DOCTYPE html>
 <html lang="pl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Dziennik kierowcy</title>
-  <link rel="manifest" href="manifest.json" />
-  <meta name="theme-color" content="#0d6efd" />
-  <link rel="icon" href="icon-192.png" type="image/png" />
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Dziennik kierowcy (PWA)</title>
+<link rel="manifest" href="manifest.json" />
+<meta name="theme-color" content="#0d6efd" />
+<link rel="icon" href="icon-192.png" type="image/png" />
 
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f4f6f8;
-      margin: 0;
-    }
-    header {
-      text-align: center;
-      background: #0d6efd;
-      color: #fff;
-      padding: 15px;
-      font-size: 20px;
-    }
-    .wrap {
-      max-width: 800px;
-      margin: 20px auto;
-      background: #fff;
-      border-radius: 10px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-      padding: 20px;
-    }
-    label {
-      font-weight: bold;
-      margin-top: 10px;
-      display: block;
-    }
-    input,
-    select,
-    button {
-      width: 100%;
-      padding: 10px;
-      margin-top: 4px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
-      font-size: 15px;
-    }
-    button {
-      background: #0d6efd;
-      color: #fff;
-      border: none;
-      cursor: pointer;
-      margin-top: 10px;
-    }
-    button:hover {
-      filter: brightness(0.95);
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 15px;
-    }
-    th,
-    td {
-      border: 1px solid #ccc;
-      padding: 8px;
-      text-align: center;
-    }
-    th {
-      background: #e8f0ff;
-    }
-    footer {
-      text-align: center;
-      margin: 15px 0;
-      color: #777;
-    }
-  </style>
+<style>
+  :root {
+    --primary: #0d6efd;
+    --bg: #f5f7fa;
+    --card: #fff;
+    --muted: #6c757d;
+  }
+  * { box-sizing: border-box; }
+  body {
+    font-family: Arial, sans-serif;
+    background: var(--bg);
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+  }
+  header {
+    padding: 16px 20px;
+    background: var(--primary);
+    color: #fff;
+    text-align: center;
+    font-size: 20px;
+    font-weight: bold;
+  }
+  .container {
+    flex: 1;
+    padding: 20px;
+    max-width: 900px;
+    margin: auto;
+    display: grid;
+    gap: 16px;
+  }
+  .card {
+    background: var(--card);
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    padding: 16px;
+  }
+  label { font-weight: 700; margin: 10px 0 6px; display: block; }
+  input, select, button {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 10px;
+    border: 1px solid #d0d7de;
+    font-size: 15px;
+  }
+  .row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .btn { background: var(--primary); color: #fff; border: none; cursor: pointer; }
+  .btn:hover { filter: brightness(0.95); }
+  .btn-danger { background: #dc3545; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  th, td {
+    padding: 10px;
+    border-bottom: 1px solid #e9ecef;
+    text-align: center;
+    vertical-align: middle;
+  }
+  thead th { background: #eef4ff; font-weight: 700; }
+  footer {
+    text-align: center;
+    padding: 14px;
+    color: #666;
+    font-size: 14px;
+  }
+  @media (max-width: 760px) {
+    .row { grid-template-columns: 1fr; }
+  }
+</style>
 </head>
+
 <body>
-  <header>🚛 Dziennik kierowcy</header>
+<header>🚛 Dziennik kierowcy</header>
 
-  <div class="wrap">
-    <label>Kierowca</label>
-    <input id="driver" oninput="saveHeader()" placeholder="Imię i nazwisko" />
+<div class="container">
+  <div class="card">
+    <div class="row">
+      <div>
+        <label for="driver">Kierowca</label>
+        <input id="driver" placeholder="Imię i nazwisko" oninput="saveHeader()">
+      </div>
+      <div>
+        <label for="car">Nr auta</label>
+        <input id="car" placeholder="Numer rejestracyjny" oninput="saveHeader()">
+      </div>
+    </div>
 
-    <label>Nr auta</label>
-    <input id="car" oninput="saveHeader()" placeholder="Numer rejestracyjny" />
+    <div class="row">
+      <div>
+        <label for="type">Rodzaj</label>
+        <select id="type">
+          <option value="Załadunek">Załadunek</option>
+          <option value="Rozładunek">Rozładunek</option>
+        </select>
+      </div>
+      <div>
+        <label for="date">Data</label>
+        <input type="date" id="date">
+      </div>
+    </div>
 
-    <label>Rodzaj</label>
-    <select id="type">
-      <option value="Załadunek">Załadunek</option>
-      <option value="Rozładunek">Rozładunek</option>
-    </select>
+    <label for="place">Miejsce</label>
+    <input id="place" placeholder="np. Poznań, magazyn A">
 
-    <label>Data</label>
-    <input type="date" id="date" />
+    <label for="odo">Stan licznika (km)</label>
+    <input id="odo" type="number" inputmode="numeric" placeholder="np. 150000">
 
-    <label>Miejsce</label>
-    <input id="place" placeholder="Miejsce" />
+    <div class="row" style="margin-top:10px;">
+      <button class="btn" onclick="addEntry()">➕ Dodaj wpis</button>
+      <button class="btn btn-danger" onclick="clearAll()">🗑️ Wyczyść</button>
+    </div>
+  </div>
 
-    <label>Stan licznika (km)</label>
-    <input type="number" id="odo" placeholder="np. 150000" />
-
-    <button onclick="addEntry()">➕ Dodaj wpis</button>
-    <button onclick="clearAll()" style="background:#dc3545;">🗑️ Wyczyść wszystko</button>
-
+  <div class="card">
     <table id="table">
       <thead>
         <tr>
@@ -115,61 +143,60 @@
       <tbody></tbody>
     </table>
   </div>
+</div>
 
-  <footer>Twórcy: Łukasz Stasinski & ChatGPT (GPT-5)</footer>
+<footer>Twórcy: Łukasz Stasinski & ChatGPT (GPT-5)</footer>
 
-  <script>
-    let entries = JSON.parse(localStorage.getItem("driverLog") || "[]");
+<script>
+let entries = JSON.parse(localStorage.getItem("driverLog") || "[]");
 
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker
-        .register("./sw.js")
-        .then(() => console.log("SW zarejestrowany ✅"))
-        .catch(e => console.error("SW błąd:", e));
-    }
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("./sw.js")
+    .then(()=>console.log("SW OK ✅"))
+    .catch(err=>console.error("Błąd SW:", err));
+}
 
-    function render() {
-      const tbody = document.querySelector("#table tbody");
-      tbody.innerHTML = entries
-        .map(
-          e =>
-            `<tr><td>${e.date}</td><td>${e.type}</td><td>${e.place}</td><td>${e.odo}</td></tr>`
-        )
-        .join("");
-    }
+function render() {
+  const tb = document.querySelector("#table tbody");
+  tb.innerHTML = entries.map(e =>
+    `<tr>
+      <td>${e.date}</td>
+      <td>${e.type}</td>
+      <td>${e.place}</td>
+      <td>${e.odo}</td>
+    </tr>`
+  ).join("");
+}
 
-    function addEntry() {
-      const type = document.getElementById("type").value;
-      const date =
-        document.getElementById("date").value ||
-        new Date().toISOString().slice(0, 10);
-      const place = document.getElementById("place").value.trim();
-      const odo = document.getElementById("odo").value.trim();
-      if (!place || !odo) {
-        alert("Uzupełnij miejsce i licznik!");
-        return;
-      }
-      entries.push({ date, type, place, odo });
-      localStorage.setItem("driverLog", JSON.stringify(entries));
-      render();
-      document.getElementById("place").value = "";
-      document.getElementById("odo").value = "";
-    }
+function addEntry() {
+  const type = document.getElementById("type").value;
+  const date = document.getElementById("date").value || new Date().toISOString().slice(0,10);
+  const place = document.getElementById("place").value.trim();
+  const odo = document.getElementById("odo").value.trim();
 
-    function clearAll() {
-      if (confirm("Na pewno usunąć wszystkie dane?")) {
-        entries = [];
-        localStorage.removeItem("driverLog");
-        render();
-      }
-    }
+  if (!place || !odo) { alert("Uzupełnij miejsce i licznik!"); return; }
 
-    function saveHeader() {
-      localStorage.setItem("driverName", document.getElementById("driver").value);
-      localStorage.setItem("carNumber", document.getElementById("car").value);
-    }
+  entries.push({ date, type, place, odo });
+  localStorage.setItem("driverLog", JSON.stringify(entries));
+  render();
+  document.getElementById("place").value = "";
+  document.getElementById("odo").value = "";
+}
 
+function clearAll() {
+  if (confirm("Na pewno usunąć wszystkie dane?")) {
+    entries = [];
+    localStorage.removeItem("driverLog");
     render();
-  </script>
+  }
+}
+
+function saveHeader() {
+  localStorage.setItem("driverName", document.getElementById("driver").value);
+  localStorage.setItem("carNumber", document.getElementById("car").value);
+}
+
+render();
+</script>
 </body>
 </html>
