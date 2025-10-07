@@ -2,19 +2,21 @@ self.addEventListener("install", e => {
   e.waitUntil(
     caches.open("dziennik-kierowcy-v1").then(cache => {
       return cache.addAll([
-        "/Dziennik-Kiero-/",
-        "/Dziennik-Kiero-/index.html",
-        "/Dziennik-Kiero-/manifest.json",
-        "/Dziennik-Kiero-/icon-192.png",
-        "/Dziennik-Kiero-/icon-512.png"
+        "./",
+        "./index.html",
+        "./manifest.json",
+        "./icon-192.png",
+        "./icon-512.png"
       ]);
     })
   );
-  console.log("Service Worker zainstalowany ✅");
+  console.log("✅ Service Worker zainstalowany i pliki zbuforowane");
 });
 
 self.addEventListener("fetch", e => {
   e.respondWith(
-    caches.match(e.request).then(resp => resp || fetch(e.request))
+    caches.match(e.request).then(resp => {
+      return resp || fetch(e.request);
+    })
   );
 });
